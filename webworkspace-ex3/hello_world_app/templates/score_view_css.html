@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scoreboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #303130;
+      font-family: 'Oswald', sans-serif;
+    }
+
+    .scoreboard {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      width: 580px;
+    }
+
+    .player-inputs {
+      display: flex;
+      width: 100%;
+      background-color: #708f70;
+      border-radius: 10px 10px 0 0;
+      padding: 14px 0 10px;
+    }
+
+    .player-inputs .label {
+      flex: 1;
+      text-align: center;
+      color: #ffffff;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      letter-spacing: 0.08em;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .score-row {
+      display: flex;
+      width: 100%;
+      background-color: #5e6b5e;
+      padding: 12px 14px 18px;
+      gap: 14px;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .score-panel {
+      flex: 1;
+      background-color: #d4d8d0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+      box-shadow:
+        inset 2px 2px 6px rgba(255,255,255,0.6),
+        inset -2px -2px 6px rgba(0,0,0,0.15),
+        3px 3px 8px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .score-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 9rem;
+      font-weight: 900;
+      color: #111;
+      line-height: 1;
+      text-shadow:
+        3px 3px 0px #000,
+        -1px -1px 0px #333;
+      letter-spacing: -0.02em;
+      transition: transform 0.08s ease, text-shadow 0.08s ease;
+      user-select: none;
+      padding: 0 16px;
+    }
+
+    .score-btn:hover {
+      transform: scale(1.06);
+      text-shadow:
+        4px 4px 0px #000,
+        -1px -1px 0px #222,
+        0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .score-btn:active {
+      transform: scale(0.96);
+    }
+
+    .score-panel.active::after {
+        content: '';
+        position: absolute;
+        bottom: 10px;
+        right: 12px;
+        width: 14px;
+        height: 14px;
+        background-color: #111;
+        border-radius: 50%;
+        box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .reset-btn {
+      background: #4a5e4a;
+      color: #e8ede8;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 28px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .reset-btn:hover { background: #3a4e3a; transform: translateY(-1px); }
+    .reset-btn:active { transform: translateY(1px); }
+
+
+    .hint {
+      margin-top: 10px;
+      color: #c8d4c8;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      opacity: 0.75;
+    }
+  </style>
+</head>
+<body>
+
+<div class="scoreboard">
+  <div class="player-inputs" style="margin-top:16px; display:flex; gap:120px; justify-content:center;">
+  <input id="home-name" type="text" value="Home" placeholder="Home" 
+    style="padding:8px; font-family:Oswald,sans-serif; border-radius:4px; border:none;"/>
+  <input id="visitor-name" type="text" value="Visitor" placeholder="Visitor"
+    style="padding:8px; font-family:Oswald,sans-serif; border-radius:4px; border:none;"/>
+</div>
+
+  <div class="score-row">
+    <div class="score-panel home">
+      <button class="score-btn" id="home-score" onclick="increment('home')" title="Click to add point">0</button>
+    </div>
+    <div class="score-panel visitor">
+      <button class="score-btn" id="visitor-score" onclick="increment('visitor')" title="Click to add point">0</button>
+    </div>
+  </div>
+  <p class="hint">Click a score to increment &nbsp;·&nbsp; Right-click to decrement</p>
+
+  <div class="controls">
+    <!-- <button class="games-view-btn" onclick="games-view()"></button> -->
+    <a href="game/games_view/" class="reset-btn" style="text-decoration:none; display:inline-block;">View Past Games</a>
+  </div>
+</div>
+
+<script>
+  const scores = { home: 0, visitor: 0 };
+  const winning_score = 11;
+  const winning_margin = 2;
+
+  let totalPoints = 0;
+
+  function increment(team) {
+    scores[team]++;
+    totalPoints++;
+    update(team);
+    updateDot();
+    checkGameOver();
+  }
+
+  function decrement(team) {
+    if (scores[team] > 0) scores[team]--;
+    update(team);
+  }
+
+  function checkGameOver(){
+    const h = scores.home;
+    const v = scores.visitor;
+
+    const homeWins = (h >= winning_score && (h-v) >= winning_margin); 
+    const visitorWins = (v >= winning_score && (v-h) >= winning_margin); 
+    if (homeWins || visitorWins) {
+        const winner = homeWins
+            ? document.getElementById('home-name').value
+            : document.getElementById('visitor-name').value;
+        saveGame(winner);
+    }
+  }
+
+  async function saveGame(winner) {
+    const payload = {
+        player1_name: document.getElementById('home-name').value || 'Home',
+        player2_name: document.getElementById('visitor-name').value || 'Visitor',
+        player1_score: scores.home,
+        player2_score: scores.visitor,
+        winner: winner,
+        date: new Date().toISOString().split('T')[0] //YYYY-MM-DD
+    };
+
+    try {
+        const response = await fetch('/save-game/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+            alert('Game Saved. ${winner} won.');
+            reset();
+        } else {
+            alert('Error saving game.');
+        }
+    } catch (err) {
+        console.error('Saving failed:', err);
+    }
+
+    }
+
+  function updateDot() {
+    const homePanel = document.querySelector('.score-panel.home');
+    const visitorPanel = document.querySelector('.score-panel.visitor');
+
+    const dotOnHome = Math.floor(totalPoints / 2) % 2 === 0;
+
+    homePanel.classList.toggle('active', dotOnHome);
+    visitorPanel.classList.toggle('active', !dotOnHome);
+}
+
+  function update(team) {
+    const el = document.getElementById(team + '-score');
+    el.textContent = scores[team];
+    el.style.animation = 'none';
+    el.offsetHeight;
+    el.style.animation = 'pop 0.15s ease';
+  }
+
+  function reset() {
+    scores.home = 0;
+    scores.visitor = 0;
+    totalPoints = 0;
+    update('home');
+    update('visitor');
+    updateDot();
+  }
+
+  document.getElementById('home-score').addEventListener('contextmenu', e => {
+    e.preventDefault(); decrement('home');
+  });
+  document.getElementById('visitor-score').addEventListener('contextmenu', e => {
+    e.preventDefault(); decrement('visitor');
+  });
+
+updateDot();
+</script>
+
+<style>
+  @keyframes pop {
+    0%   { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+</style>
+
+</body>
+</html>

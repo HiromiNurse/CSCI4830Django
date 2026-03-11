@@ -22,7 +22,8 @@ from hello_world_app import views
 
 urlpatterns = [
     path('', views.score_view, name='score_view_default'),
-    path('score/', views.score_view, name='score_view'),
-    path('score/edit/<int:score_id>/', views.edit_score, name='edit_score'),
-    path('score/delete/<int:score_id>/', views.delete_score, name='delete_score'),
+    path('save-game/', views.save_game, name='save_game'),
+    path('game/games_view/', views.games_view, name='games_view'),
+    path('game/edit/<int:game_id>/', views.edit_game, name='edit_game'),
+    path('game/delete/<int:game_id>/', views.delete_game, name='delete_game'),
 ]
